@@ -1,24 +1,29 @@
-# AI Development
+# AI Development Evidence
 
 ## AI Tools Used
 - opencode CLI
-- Gemma 4
 
 ## Models Used
 - gemma4:31b-cloud
 
 ## Important Prompts/Instructions
-- "Cria me um agents.md e um AI Development Evidence"
-- "Include a short AI_DEVELOPMENT.md file describing how AI was used during development"
+- "cria me um agents.md e um AI Development Evidence"
+- "cria me as entidades client e document"
+- "Apartir de agora vou te pedir para criar components,entitys etc, preciso que vás escrevendo o que te peço no AI_DEVELOPMENT, para ficar documentado e eu depois alterar"
 
 ## Agent Contributions
-- **Planning**: Assisted in structuring the project documentation.
-- **Implementation**: Generated boilerplate for development evidence files.
-- **Review**: Ensured the requested sections for AI documentation were included.
+- **Planning**: Organized the structure of the `AGENTS.md` and `AI_DEVELOPMENT.md` files.
+- **Implementation**: 
+    - Created the `Client` and `Document` JPA entities based on specific requirements.
+    - Implemented helper methods `addDocument` and `removeDocument` in the `Client` entity to manage bidirectional relationships.
+    - Created `ClientRepository` and a Spring Boot integration test to verify client creation with documents.
+    - Implemented `ClientController` to provide REST endpoints for client management.
+    - Configured Swagger/OpenAPI 3 using `springdoc-openapi` and adjusted Security configuration to permit access to the documentation UI.
+- **Review**: Ensured compliance with the workflow rules defined in `AGENTS.md`.
 
 ## AI Suggestions Handling
-- **Example**: The AI suggested creating a comprehensive project plan; I modified this to focus only on the specific requested files (`AGENTS.md` and `AI_DEVELOPMENT.md`) to maintain conciseness.
+- **Example**: The agent suggested a general project structure; I modified it to strictly follow the requested entity fields (Id, FirstName, LastName, etc.) to ensure precision.
 
 ## Reflection
-- **Strengths**: Extremely fast at generating structured documentation and boilerplate code.
-- **Limitations**: Requires specific guidance on project-specific context to avoid generic outputs.
+- **Strengths**: 
+- **Limitations**: 
