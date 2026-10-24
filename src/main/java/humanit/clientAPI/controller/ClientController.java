@@ -1,8 +1,9 @@
 package humanit.clientAPI.controller;
 
-import humanit.clientAPI.entity.Client;
-import humanit.clientAPI.repository.ClientRepository;
+import humanit.clientAPI.dto.*;
+import humanit.clientAPI.service.ClientService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,43 +14,31 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ClientController {
 
-    private final ClientRepository clientRepository;
+    private final ClientService clientService;
 
     @GetMapping
-    public List<Client> getAllClients() {
-        return clientRepository.findAll();
+    public ResponseEntity<List<ClientResponseDTO>> getAllClients() {
+        return ResponseEntity.ok(clientService.findAll());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Client> getClientById(@PathVariable Long id) {
-        return clientRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<ClientResponseDTO> getClientById(@PathVariable Long id) {
+        return ResponseEntity.ok(clientService.findById(id));
     }
 
     @PostMapping
-    public Client createClient(@RequestBody Client client) {
-        return clientRepository.save(client);
+    public ResponseEntity<ClientResponseDTO> createClient(@RequestBody ClientRequestDTO dto) {
+        return new ResponseEntity<>(clientService.create(dto), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Client> updateClient(@PathVariable Long id, @RequestBody Client clientDetails) {
-        return clientRepository.findById(id).map(client -> {
-            client.setFirstName(clientDetails.getFirstName());
-            client.setLastName(clientDetails.getLastName());
-            client.setTaxIdentifier(clientDetails.getTaxIdentifier());
-            client.setEmail(clientDetails.getEmail());
-            client.setPhoneNumber(clientDetails.getPhoneNumber());
-            return ResponseEntity.ok(clientRepository.save(client));
-        }).orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<ClientResponseDTO> updateClient(@PathVariable Long id, @RequestBody ClientRequestDTO dto) {
+        return ResponseEntity.ok(clientService.update(id, dto));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteClient(@PathVariable Long id) {
-        if (clientRepository.existsById(id)) {
-            clientRepository.deleteById(id);
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.notFound().build();
+        clientService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }
