@@ -29,10 +29,16 @@
     - Added a global exception handling mechanism using `@ControllerAdvice` for consistent REST error responses.
     - Corrected the logic to ensure documents are correctly persisted when creating/updating a client.
     - Refactored controllers to use proper REST status codes (e.g., `201 Created`, `204 No Content`).
+    - Implemented comprehensive integration tests for all API endpoints using `MockMvc`.
+    - Resolved `NoSuchBeanDefinitionException` for `ObjectMapper` in tests by switching to manual instantiation.
+    - Fixed `InvalidDefinitionException` related to `LocalDate` serialization by registering `JavaTimeModule`.
+    - Fixed `NullPointerException` in `Client.addDocument` by adding `@Builder.Default` to the documents list to ensure initialization when using Lombok builders.
+
 - **Review**: Ensured compliance with the workflow rules defined in `AGENTS.md`.
 
 ## AI Suggestions Handling
 - **Example**: The agent suggested a general project structure; I modified it to strictly follow the requested entity fields (Id, FirstName, LastName, etc.) to ensure precision.
+
 - **Example**: Encountered a dependency version mismatch with `springdoc-openapi`. I used Claude Code to generate the correct prompt and version requirement to resolve the compatibility issue with Spring Boot 4.
 
 ## Reflection

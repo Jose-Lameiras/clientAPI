@@ -22,8 +22,10 @@ public class Client {
     private String email;
     private String phoneNumber;
 
+    @Builder.Default
     @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Document> documents;
+    private List<Document> documents = new java.util.ArrayList<>();
+
 
     public void addDocument(Document document) {
         documents.add(document);

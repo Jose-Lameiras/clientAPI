@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.servlet.NoHandlerFoundException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -14,7 +15,7 @@ public class GlobalExceptionHandler {
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
         String message = ex.getMessage();
         
-        if (message != null && message.contains("not found")) {
+        if (message != null && message.toLowerCase().contains("not found")) {
             status = HttpStatus.NOT_FOUND;
         }
 
@@ -25,6 +26,17 @@ public class GlobalExceptionHandler {
                 request.getDescription(false).replace("uri=", "")
         );
         return new ResponseEntity<>(apiException, status);
+    }
+
+    @ExceptionHandler(NoHandlerFoundException.class)
+    public ResponseEntity<ApiException> handleNoHandlerFoundException(NoHandlerFoundException ex, WebRequest request) {
+        ApiException apiException = new ApiException(
+                HttpStatus.NOT_FOUND.value(),
+                "Not Found",
+                "Resource not found",
+                request.getDescription(false).replace("uri=", "")
+        );
+        return new ResponseEntity<>(apiException, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(Exception.class)
