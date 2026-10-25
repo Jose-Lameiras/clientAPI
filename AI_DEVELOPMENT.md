@@ -5,10 +5,13 @@
 
 ## Models Used
 - gemma4:31b-cloud
+- Claude Code (Tive erros em que não compilava e eu não sabia porque)
 
 ## Important Prompts/Instructions
 - "cria me um agents.md e um AI Development Evidence"
+
 - "cria me as entidades client e document"
+
 - "Apartir de agora vou te pedir para criar components,entitys etc, preciso que vás escrevendo o que te peço no AI_DEVELOPMENT, para ficar documentado e eu depois alterar"
 
 - "Adiciona addDocument() e removeDocument() no Client"
