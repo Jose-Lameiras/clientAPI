@@ -1,0 +1,10 @@
+services:
+  client-api:
+    build: .
+    container_name: client-api
+    ports:
+      - "8080:8080"
+    environment:
+      - JWT_SECRET=uma_chave_secreta_muito_longa_e_segura_1234567890
+      - SPRING_PROFILES_ACTIVE=default
+    restart: always

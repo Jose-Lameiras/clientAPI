@@ -10,14 +10,38 @@
 - "cria me um agents.md e um AI Development Evidence"
 - "cria me as entidades client e document"
 - "Apartir de agora vou te pedir para criar components,entitys etc, preciso que vás escrevendo o que te peço no AI_DEVELOPMENT, para ficar documentado e eu depois alterar"
+
 - "Adiciona addDocument() e removeDocument() no Client"
+
 - "Cria um ClientRepository e faz me já um codigo de teste a criar 2 clientes com o addDocument"
+
 - "cria me o ClientController"
+
 - "ajuda me a configurar o swagger para este projeto"
+
 - "Revê o que fizeste. Os documentos ainda não são gravados com o cliente, e os status codes e o tratamento de erros não seguem as convenções REST. Corrige isso e cria um tratamento global de exceções."
+
 - "O springdoc 2.6.0 é para Spring Boot 3. Atualiza o pom.xml para uma versão 3.x do springdoc, compatível com Spring Boot 4." 
+
 - "A propriedade security.enabled=false não existe no Spring e não quero desligar a segurança nos testes. Apaga o application-test.properties e o @ActiveProfiles. Usa .with(jwt()) do SecurityMockMvcRequestPostProcessors em cada pedido dos testes. Adiciona também um teste que confirma 401 sem token e um teste de login que devolve um token. Corre ./mvnw clean test até passar."
+
 - "Voltaste a usar o import do Spring Boot 3. O AutoConfigureMockMvc está em org.springframework.boot.webmvc.test.autoconfigure. Corrige e remove o spring-boot-starter-test do pom.xml."
+
+- "vamos fazer um cleanCode, analisa os codigos e diz me onde achas que devemos mudar"
+
+- "implementa o mapper e a sincronização de documentos no update"
+
+- "implementa a validação de campos e a unicidade de NIF e Email"
+
+- "configura o botão de autenticação JWT no Swagger"
+
+- "cria DTO de Login para evitar generic props no Swagger"
+
+- "configura docker container e docker-compose com variáveis de ambiente"
+
+- "cria dados iniciais (seed) para arrancar a aplicação"
+
+- "corrige erros de compilação e imports de Optional"
 
 ## Agent Contributions
 - **Planning**: Organized the structure of the `AGENTS.md` and `AI_DEVELOPMENT.md` files.
