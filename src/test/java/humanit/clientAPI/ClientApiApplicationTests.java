@@ -54,6 +54,57 @@ public class ClientApiApplicationTests {
     }
 
     @Test
+    public void testCreateClientInvalidData() throws Exception {
+        ClientRequestDTO invalidDto = ClientRequestDTO.builder()
+                .firstName("")
+                .email("invalid-email")
+                .build();
+
+        mockMvc.perform(post("/api/clients")
+                .with(jwt())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(invalidDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Validation failed")));
+    }
+
+    @Test
+    public void testCreateClientDuplicateNif() throws Exception {
+        ClientRequestDTO duplicateDto = ClientRequestDTO.builder()
+                .firstName("Duplicate")
+                .lastName("User")
+                .taxIdentifier("123456")
+                .email("dup@test.com")
+                .phoneNumber("000000")
+                .build();
+
+        mockMvc.perform(post("/api/clients")
+                .with(jwt())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(duplicateDto)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("already exists")));
+    }
+
+    @Test
+    public void testCreateClientDuplicateEmail() throws Exception {
+        ClientRequestDTO duplicateDto = ClientRequestDTO.builder()
+                .firstName("Duplicate")
+                .lastName("User")
+                .taxIdentifier("999999")
+                .email("test@test.com")
+                .phoneNumber("000000")
+                .build();
+
+        mockMvc.perform(post("/api/clients")
+                .with(jwt())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(duplicateDto)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("already exists")));
+    }
+
+    @Test
     public void testLoginSuccess() throws Exception {
         Map<String, String> loginRequest = Map.of(
                 "username", "user",

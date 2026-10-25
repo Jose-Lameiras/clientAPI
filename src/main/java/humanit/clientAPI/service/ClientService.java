@@ -3,6 +3,7 @@ package humanit.clientAPI.service;
 import humanit.clientAPI.dto.*;
 import humanit.clientAPI.entity.Client;
 import humanit.clientAPI.entity.Document;
+import humanit.clientAPI.exception.ClientAlreadyExistsException;
 import humanit.clientAPI.exception.ClientNotFoundException;
 import humanit.clientAPI.mapper.ClientMapper;
 import humanit.clientAPI.repository.ClientRepository;
@@ -21,12 +22,14 @@ public class ClientService {
     private final ClientRepository clientRepository;
     private final ClientMapper clientMapper;
 
+    @Transactional(readOnly = true)
     public List<ClientResponseDTO> findAll() {
         return clientRepository.findAll().stream()
                 .map(clientMapper::toResponseDTO)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public ClientResponseDTO findById(Long id) {
         return clientRepository.findById(id)
                 .map(clientMapper::toResponseDTO)
@@ -36,10 +39,10 @@ public class ClientService {
     @Transactional
     public ClientResponseDTO create(ClientRequestDTO dto) {
         if (clientRepository.findByTaxIdentifier(dto.getTaxIdentifier()).isPresent()) {
-            throw new IllegalArgumentException("Client with tax identifier " + dto.getTaxIdentifier() + " already exists");
+            throw new ClientAlreadyExistsException("Client with tax identifier " + dto.getTaxIdentifier() + " already exists");
         }
         if (clientRepository.findByEmail(dto.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("Client with email " + dto.getEmail() + " already exists");
+            throw new ClientAlreadyExistsException("Client with email " + dto.getEmail() + " already exists");
         }
 
         Client client = clientMapper.toEntity(dto);
@@ -61,12 +64,12 @@ public class ClientService {
         
         Optional<Client> existingTaxId = clientRepository.findByTaxIdentifier(dto.getTaxIdentifier());
         if (existingTaxId.isPresent() && !existingTaxId.get().getId().equals(id)) {
-            throw new IllegalArgumentException("Tax identifier " + dto.getTaxIdentifier() + " is already taken by another client");
+            throw new ClientAlreadyExistsException("Tax identifier " + dto.getTaxIdentifier() + " is already taken by another client");
         }
 
         Optional<Client> existingEmail = clientRepository.findByEmail(dto.getEmail());
         if (existingEmail.isPresent() && !existingEmail.get().getId().equals(id)) {
-            throw new IllegalArgumentException("Email " + dto.getEmail() + " is already taken by another client");
+            throw new ClientAlreadyExistsException("Email " + dto.getEmail() + " is already taken by another client");
         }
 
         client.setFirstName(dto.getFirstName());
@@ -83,12 +86,10 @@ public class ClientService {
     }
 
     private void syncDocuments(Client client, List<DocumentRequestDTO> docDtos) {
-        // 1. Remover documentos que não estão no DTO
         client.getDocuments().removeIf(doc -> 
             docDtos.stream().noneMatch(dto -> dto.getNumber() != null && dto.getNumber().equals(doc.getNumber()))
         );
 
-        // 2. Atualizar existentes ou adicionar novos
         for (DocumentRequestDTO docDto : docDtos) {
             client.getDocuments().stream()
                 .filter(doc -> docDto.getNumber() != null && docDto.getNumber().equals(doc.getNumber()))
@@ -105,6 +106,7 @@ public class ClientService {
                 );
         }
     }
+
     @Transactional
     public void delete(Long id) {
         if (!clientRepository.existsById(id)) {
@@ -113,4 +115,3 @@ public class ClientService {
         clientRepository.deleteById(id);
     }
 }
-

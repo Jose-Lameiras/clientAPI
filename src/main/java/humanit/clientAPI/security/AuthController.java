@@ -13,6 +13,7 @@ import org.springframework.security.oauth2.jwt.*;
 import org.springframework.web.bind.annotation.*;
 
 import humanit.clientAPI.dto.LoginRequestDTO;
+import humanit.clientAPI.exception.ApiException;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -41,7 +42,6 @@ public class AuthController {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
                 
                 Instant now = Instant.now();
-                // Using the correct JwsAlgorithm enum from spring-security-oauth2-jose
                 JwsHeader header = JwsHeader.with(org.springframework.security.oauth2.jose.jws.MacAlgorithm.HS256).build();
                 JwtClaimsSet claims = JwtClaimsSet.builder()
                         .issuer("self")
@@ -59,11 +59,17 @@ public class AuthController {
                 ));
             }
         } catch (BadCredentialsException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                new ApiException(HttpStatus.UNAUTHORIZED.value(), "Unauthorized", "Invalid credentials", "/api/auth/login")
+            );
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred during login");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                new ApiException(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Internal Server Error", "An error occurred during login", "/api/auth/login")
+            );
         }
         
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication failed");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+            new ApiException(HttpStatus.UNAUTHORIZED.value(), "Unauthorized", "Authentication failed", "/api/auth/login")
+        );
     }
 }

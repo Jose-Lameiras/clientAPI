@@ -1,6 +1,8 @@
 package humanit.clientAPI.dto;
 
+import jakarta.validation.constraints.*;
 import lombok.*;
+import java.time.LocalDate;
 
 @Getter
 @Setter
@@ -8,7 +10,11 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class DocumentRequestDTO {
+    @NotBlank(message = "Document number is required")
     private String number;
+    
     private String description;
-    private java.time.LocalDate expirationDate;
+    
+    @NotNull(message = "Expiration date is required")
+    private LocalDate expirationDate;
 }

@@ -1,5 +1,6 @@
 package humanit.clientAPI.dto;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import java.util.List;
@@ -26,5 +27,7 @@ public class ClientRequestDTO {
     @NotBlank(message = "Phone number is required")
     private String phoneNumber;
     
+    @Valid
     private List<DocumentRequestDTO> documents;
 }
+
