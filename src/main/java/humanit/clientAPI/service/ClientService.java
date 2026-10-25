@@ -34,6 +34,13 @@ public class ClientService {
 
     @Transactional
     public ClientResponseDTO create(ClientRequestDTO dto) {
+        if (clientRepository.findByTaxIdentifier(dto.getTaxIdentifier()).isPresent()) {
+            throw new IllegalArgumentException("Client with tax identifier " + dto.getTaxIdentifier() + " already exists");
+        }
+        if (clientRepository.findByEmail(dto.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("Client with email " + dto.getEmail() + " already exists");
+        }
+
         Client client = clientMapper.toEntity(dto);
 
         if (dto.getDocuments() != null) {
@@ -51,6 +58,16 @@ public class ClientService {
         Client client = clientRepository.findById(id)
                 .orElseThrow(() -> new ClientNotFoundException(id));
         
+        Optional<Client> existingTaxId = clientRepository.findByTaxIdentifier(dto.getTaxIdentifier());
+        if (existingTaxId.isPresent() && !existingTaxId.get().getId().equals(id)) {
+            throw new IllegalArgumentException("Tax identifier " + dto.getTaxIdentifier() + " is already taken by another client");
+        }
+
+        Optional<Client> existingEmail = clientRepository.findByEmail(dto.getEmail());
+        if (existingEmail.isPresent() && !existingEmail.get().getId().equals(id)) {
+            throw new IllegalArgumentException("Email " + dto.getEmail() + " is already taken by another client");
+        }
+
         client.setFirstName(dto.getFirstName());
         client.setLastName(dto.getLastName());
         client.setTaxIdentifier(dto.getTaxIdentifier());

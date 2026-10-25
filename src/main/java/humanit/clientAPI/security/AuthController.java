@@ -12,6 +12,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.web.bind.annotation.*;
 
+import humanit.clientAPI.dto.LoginRequestDTO;
+
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
@@ -26,9 +28,9 @@ public class AuthController {
     private final JwtEncoder jwtEncoder;
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> credentials) {
-        String username = credentials.get("username");
-        String password = credentials.get("password");
+    public ResponseEntity<?> login(@RequestBody LoginRequestDTO credentials) {
+        String username = credentials.getUsername();
+        String password = credentials.getPassword();
 
         try {
             Authentication authentication = authenticationManager.authenticate(

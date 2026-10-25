@@ -1,5 +1,6 @@
 package humanit.clientAPI.controller;
 
+import jakarta.validation.Valid;
 import humanit.clientAPI.dto.*;
 import humanit.clientAPI.service.ClientService;
 import lombok.RequiredArgsConstructor;
@@ -27,12 +28,12 @@ public class ClientController {
     }
 
     @PostMapping
-    public ResponseEntity<ClientResponseDTO> createClient(@RequestBody ClientRequestDTO dto) {
+    public ResponseEntity<ClientResponseDTO> createClient(@Valid @RequestBody ClientRequestDTO dto) {
         return new ResponseEntity<>(clientService.create(dto), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ClientResponseDTO> updateClient(@PathVariable Long id, @RequestBody ClientRequestDTO dto) {
+    public ResponseEntity<ClientResponseDTO> updateClient(@PathVariable Long id, @Valid @RequestBody ClientRequestDTO dto) {
         return ResponseEntity.ok(clientService.update(id, dto));
     }
 

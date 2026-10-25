@@ -5,7 +5,10 @@ import lombok.*;
 import java.util.List;
 
 @Entity
-@Table(name = "clients")
+@Table(name = "clients", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"taxIdentifier"}),
+    @UniqueConstraint(columnNames = {"email"})
+})
 @Getter
 @Setter
 @NoArgsConstructor

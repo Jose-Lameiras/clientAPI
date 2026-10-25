@@ -1,60 +1,60 @@
 package humanit.clientAPI.exception;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
-import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
     @ExceptionHandler(ClientNotFoundException.class)
-    public ResponseEntity<ApiException> handleClientNotFoundException(ClientNotFoundException ex, WebRequest request) {
-        ApiException apiException = new ApiException(
-                HttpStatus.NOT_FOUND.value(),
-                "Not Found",
-                ex.getMessage(),
-                request.getDescription(false).replace("uri=", "")
-        );
-        return new ResponseEntity<>(apiException, HttpStatus.NOT_FOUND);
+    public ResponseEntity<ApiException> handleClientNotFound(ClientNotFoundException ex, WebRequest request) {
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), request);
     }
 
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<ApiException> handleRuntimeException(RuntimeException ex, WebRequest request) {
-        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
-        String message = ex.getMessage();
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiException> handleUnreadableBody(HttpMessageNotReadableException ex, WebRequest request) {
+        return buildResponse(HttpStatus.BAD_REQUEST, "Malformed request body", request);
+    }
 
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiException> handleTypeMismatch(MethodArgumentTypeMismatchException ex, WebRequest request) {
+        return buildResponse(HttpStatus.BAD_REQUEST, "Invalid value for parameter '" + ex.getName() + "'", request);
+    }
 
-        ApiException apiException = new ApiException(
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ApiException> handleNoResource(NoResourceFoundException ex, WebRequest request) {
+        return buildResponse(HttpStatus.NOT_FOUND, "Resource not found", request);
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ApiException> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex, WebRequest request) {
+        return buildResponse(HttpStatus.METHOD_NOT_ALLOWED, "Method " + ex.getMethod() + " not supported", request);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiException> handleUnexpected(Exception ex, WebRequest request) {
+        log.error("Unexpected error", ex);
+        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred", request);
+    }
+
+    private ResponseEntity<ApiException> buildResponse(HttpStatus status, String message, WebRequest request) {
+        ApiException body = new ApiException(
                 status.value(),
                 status.getReasonPhrase(),
                 message,
                 request.getDescription(false).replace("uri=", "")
         );
-        return new ResponseEntity<>(apiException, status);
-    }
-
-    @ExceptionHandler(NoHandlerFoundException.class)
-    public ResponseEntity<ApiException> handleNoHandlerFoundException(NoHandlerFoundException ex, WebRequest request) {
-        ApiException apiException = new ApiException(
-                HttpStatus.NOT_FOUND.value(),
-                "Not Found",
-                "Resource not found",
-                request.getDescription(false).replace("uri=", "")
-        );
-        return new ResponseEntity<>(apiException, HttpStatus.NOT_FOUND);
-    }
-
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiException> handleGeneralException(Exception ex, WebRequest request) {
-        ApiException apiException = new ApiException(
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "Internal Server Error",
-                "An unexpected error occurred",
-                request.getDescription(false).replace("uri=", "")
-        );
-        return new ResponseEntity<>(apiException, HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(body, status);
     }
 }
