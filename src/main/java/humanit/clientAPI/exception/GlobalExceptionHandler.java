@@ -10,14 +10,22 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(ClientNotFoundException.class)
+    public ResponseEntity<ApiException> handleClientNotFoundException(ClientNotFoundException ex, WebRequest request) {
+        ApiException apiException = new ApiException(
+                HttpStatus.NOT_FOUND.value(),
+                "Not Found",
+                ex.getMessage(),
+                request.getDescription(false).replace("uri=", "")
+        );
+        return new ResponseEntity<>(apiException, HttpStatus.NOT_FOUND);
+    }
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiException> handleRuntimeException(RuntimeException ex, WebRequest request) {
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
         String message = ex.getMessage();
-        
-        if (message != null && message.toLowerCase().contains("not found")) {
-            status = HttpStatus.NOT_FOUND;
-        }
+
 
         ApiException apiException = new ApiException(
                 status.value(),

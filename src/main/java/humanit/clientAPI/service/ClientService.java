@@ -3,6 +3,8 @@ package humanit.clientAPI.service;
 import humanit.clientAPI.dto.*;
 import humanit.clientAPI.entity.Client;
 import humanit.clientAPI.entity.Document;
+import humanit.clientAPI.exception.ClientNotFoundException;
+import humanit.clientAPI.mapper.ClientMapper;
 import humanit.clientAPI.repository.ClientRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,47 +18,38 @@ import java.util.stream.Collectors;
 public class ClientService {
 
     private final ClientRepository clientRepository;
+    private final ClientMapper clientMapper;
 
     public List<ClientResponseDTO> findAll() {
         return clientRepository.findAll().stream()
-                .map(this::convertToResponseDTO)
+                .map(clientMapper::toResponseDTO)
                 .collect(Collectors.toList());
     }
 
     public ClientResponseDTO findById(Long id) {
         return clientRepository.findById(id)
-                .map(this::convertToResponseDTO)
-                .orElseThrow(() -> new RuntimeException("Client not found with id: " + id));
+                .map(clientMapper::toResponseDTO)
+                .orElseThrow(() -> new ClientNotFoundException(id));
     }
 
     @Transactional
     public ClientResponseDTO create(ClientRequestDTO dto) {
-        Client client = Client.builder()
-                .firstName(dto.getFirstName())
-                .lastName(dto.getLastName())
-                .taxIdentifier(dto.getTaxIdentifier())
-                .email(dto.getEmail())
-                .phoneNumber(dto.getPhoneNumber())
-                .build();
+        Client client = clientMapper.toEntity(dto);
 
         if (dto.getDocuments() != null) {
             dto.getDocuments().forEach(docDto -> {
-                Document doc = Document.builder()
-                        .number(docDto.getNumber())
-                        .description(docDto.getDescription())
-                        .expirationDate(docDto.getExpirationDate())
-                        .build();
+                Document doc = clientMapper.toDocumentEntity(docDto);
                 client.addDocument(doc);
             });
         }
 
-        return convertToResponseDTO(clientRepository.save(client));
+        return clientMapper.toResponseDTO(clientRepository.save(client));
     }
 
     @Transactional
     public ClientResponseDTO update(Long id, ClientRequestDTO dto) {
         Client client = clientRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Client not found with id: " + id));
+                .orElseThrow(() -> new ClientNotFoundException(id));
         
         client.setFirstName(dto.getFirstName());
         client.setLastName(dto.getLastName());
@@ -65,44 +58,41 @@ public class ClientService {
         client.setPhoneNumber(dto.getPhoneNumber());
         
         if (dto.getDocuments() != null) {
-            client.getDocuments().clear();
-            dto.getDocuments().forEach(docDto -> {
-                Document doc = Document.builder()
-                        .number(docDto.getNumber())
-                        .description(docDto.getDescription())
-                        .expirationDate(docDto.getExpirationDate())
-                        .build();
-                client.addDocument(doc);
-            });
+            syncDocuments(client, dto.getDocuments());
         }
         
-        return convertToResponseDTO(clientRepository.save(client));
+        return clientMapper.toResponseDTO(clientRepository.save(client));
     }
 
+    private void syncDocuments(Client client, List<DocumentRequestDTO> docDtos) {
+        // 1. Remover documentos que não estão no DTO
+        client.getDocuments().removeIf(doc -> 
+            docDtos.stream().noneMatch(dto -> dto.getNumber() != null && dto.getNumber().equals(doc.getNumber()))
+        );
+
+        // 2. Atualizar existentes ou adicionar novos
+        for (DocumentRequestDTO docDto : docDtos) {
+            client.getDocuments().stream()
+                .filter(doc -> docDto.getNumber() != null && docDto.getNumber().equals(doc.getNumber()))
+                .findFirst()
+                .ifPresentOrElse(
+                    doc -> {
+                        doc.setDescription(docDto.getDescription());
+                        doc.setExpirationDate(docDto.getExpirationDate());
+                    },
+                    () -> {
+                        Document newDoc = clientMapper.toDocumentEntity(docDto);
+                        client.addDocument(newDoc);
+                    }
+                );
+        }
+    }
     @Transactional
     public void delete(Long id) {
         if (!clientRepository.existsById(id)) {
-            throw new RuntimeException("Client not found with id: " + id);
+            throw new ClientNotFoundException(id);
         }
         clientRepository.deleteById(id);
     }
-
-    private ClientResponseDTO convertToResponseDTO(Client client) {
-        return ClientResponseDTO.builder()
-                .id(client.getId())
-                .firstName(client.getFirstName())
-                .lastName(client.getLastName())
-                .taxIdentifier(client.getTaxIdentifier())
-                .email(client.getEmail())
-                .phoneNumber(client.getPhoneNumber())
-                .documents(client.getDocuments() == null ? null : client.getDocuments().stream()
-                        .map(doc -> DocumentResponseDTO.builder()
-                                .id(doc.getId())
-                                .number(doc.getNumber())
-                                .description(doc.getDescription())
-                                .expirationDate(doc.getExpirationDate())
-                                .build())
-                        .collect(Collectors.toList()))
-                .build();
-    }
 }
+

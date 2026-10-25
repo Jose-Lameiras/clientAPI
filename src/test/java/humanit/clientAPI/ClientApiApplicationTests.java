@@ -1,21 +1,25 @@
 package humanit.clientAPI;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import humanit.clientAPI.dto.*;
 import humanit.clientAPI.entity.Client;
 import humanit.clientAPI.repository.ClientRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -30,9 +34,9 @@ public class ClientApiApplicationTests {
     @Autowired
     private ClientRepository clientRepository;
 
-    private ObjectMapper objectMapper = new ObjectMapper().registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
-
-
+    private ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule())
+            .configure(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
     private Long savedClientId;
 
@@ -50,8 +54,43 @@ public class ClientApiApplicationTests {
     }
 
     @Test
-    public void testGetAllClients() throws Exception {
+    public void testLoginSuccess() throws Exception {
+        Map<String, String> loginRequest = Map.of(
+                "username", "user",
+                "password", "password"
+        );
+
+        mockMvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(loginRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").exists())
+                .andExpect(jsonPath("$.username").value("user"));
+    }
+
+    @Test
+    public void testLoginFailure() throws Exception {
+        Map<String, String> loginRequest = Map.of(
+                "username", "user",
+                "password", "wrong-password"
+        );
+
+        mockMvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(loginRequest)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void testGetClientsUnauthorized() throws Exception {
         mockMvc.perform(get("/api/clients"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void testGetAllClients() throws Exception {
+        mockMvc.perform(get("/api/clients")
+                .with(jwt()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].firstName").value("Test"));
@@ -59,14 +98,16 @@ public class ClientApiApplicationTests {
 
     @Test
     public void testGetClientById() throws Exception {
-        mockMvc.perform(get("/api/clients/" + savedClientId))
+        mockMvc.perform(get("/api/clients/" + savedClientId)
+                .with(jwt()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.firstName").value("Test"));
     }
 
     @Test
     public void testGetClientByIdNotFound() throws Exception {
-        mockMvc.perform(get("/api/clients/999"))
+        mockMvc.perform(get("/api/clients/999")
+                .with(jwt()))
                 .andExpect(status().isNotFound());
     }
 
@@ -88,6 +129,7 @@ public class ClientApiApplicationTests {
                 .build();
 
         mockMvc.perform(post("/api/clients")
+                .with(jwt())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDto)))
                 .andExpect(status().isCreated())
@@ -106,6 +148,7 @@ public class ClientApiApplicationTests {
                 .build();
 
         mockMvc.perform(put("/api/clients/" + savedClientId)
+                .with(jwt())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateDto)))
                 .andExpect(status().isOk())
@@ -114,16 +157,19 @@ public class ClientApiApplicationTests {
 
     @Test
     public void testDeleteClient() throws Exception {
-        mockMvc.perform(delete("/api/clients/" + savedClientId))
+        mockMvc.perform(delete("/api/clients/" + savedClientId)
+                .with(jwt()))
                 .andExpect(status().isNoContent());
         
-        mockMvc.perform(get("/api/clients/" + savedClientId))
+        mockMvc.perform(get("/api/clients/" + savedClientId)
+                .with(jwt()))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     public void testDeleteClientNotFound() throws Exception {
-        mockMvc.perform(delete("/api/clients/999"))
+        mockMvc.perform(delete("/api/clients/999")
+                .with(jwt()))
                 .andExpect(status().isNotFound());
     }
 }
