@@ -1,71 +1,69 @@
 # AI Development Evidence
 
-## AI Tools Used
-- opencode CLI
+## 1. AI Tools Used
+- **OpenCode with Ollama**: Primary tool for code generation and project execution.
+- **Claude Code**: Used as a reviewer for complex debugging and as a prompt engineering assistant to refine instructions before applying them to the project.
 
-## Models Used
-- gemma4:31b-cloud
-- Claude Code (Tive erros em que não compilava e eu não sabia porque)
+## 2. Model(s) Used
+- **gemma4:31b-cloud**
+- **Claude Opus 5.5**
 
-## Important Prompts/Instructions
-- "cria me um agents.md e um AI Development Evidence"
+## 3. Important Prompts
+1. Create `AGENTS.md` and `AI_DEVELOPMENT.md`.
+2. Create `Client` and `Document` entities.
+3. Implement `ClientController`, `ClientService`, `ClientRepository`, and DTOs.
+4. Configure Swagger/OpenAPI for the project.
+5. Implement JWT authentication (Login and Token generation).
+6. Create comprehensive integration tests with `MockMvc`.
+7. Implement input validation and unique constraints (NIF/Email).
+8. Configure Docker container and Docker Compose with environment variables.
+9. Fix N+1 query problem in `findAll`.
 
-- "cria me as entidades client e document"
+**Real Prompt Examples:**
+- "Completa os DTOs que faltam e liga as camadas (controller, service, DTOs, entities e repository). Quero criar e atualizar um cliente com os seus documentos numa só transação."
+- "A propriedade security.enabled=false não existe no Spring e não quero desligar a segurança nos testes. Usa .with(jwt()) em cada pedido dos testes."
+- "O GET /api/clients está a gerar o problema N+1: uma query para os clientes e mais uma por cada cliente para os documentos. Corrige com @EntityGraph."
 
-- "Apartir de agora vou te pedir para criar components,entitys etc, preciso que vás escrevendo o que te peço no AI_DEVELOPMENT, para ficar documentado e eu depois alterar"
+## 4. How the Agent Contributed
+- **Planning**: Defined the layered architecture (Controller → Service → Repository) and DTO strategy.
+- **Implementation**: Wrote the JPA entities, REST controllers, business logic, and security configuration.
+- **Testing**: Created integration tests covering success and failure scenarios.
+- **Debugging**: Resolved compilation errors, dependency conflicts, and runtime exceptions.
+- **Review**: Refactored code for Clean Code principles, including the introduction of a Mapper pattern.
 
-- "Adiciona addDocument() e removeDocument() no Client"
+## 5. Suggestions Handling
+### Rejected
+- **Mock JWT Token**: Initial suggestion to use a hardcoded fake token was replaced by a real HMAC HS256 implementation.
+- **Security Disable**: Proposed `security.enabled=false` for tests; rejected in favor of using `.with(jwt())` to maintain real security validation.
+- **Text-based Status Codes**: Initial logic used message content to decide HTTP status; replaced by a structured `GlobalExceptionHandler`.
 
-- "Cria um ClientRepository e faz me já um codigo de teste a criar 2 clientes com o addDocument"
+### Modified/Corrected
+- **Spring Boot Versions**: Initial use of Spring Boot 3 imports for `AutoConfigureMockMvc` was corrected to Spring Boot 4. The import reappeared after a fix, and the agent initially tried to resolve it by adding dependencies instead of fixing the import.
+- **Entity Initialization**: Fixed `NullPointerException` in `Client.addDocument` by adding `@Builder.Default` to the documents list; previously, tests hid this bug by manually using `new ArrayList`.
+- **Jackson Scope**: `jackson-datatype-jsr310` was initially marked as `test` scope; corrected to global scope to fix application startup.
+- **Regressions**: Restored the `delete` method that was accidentally removed during the Mapper refactor.
+- **N+1 Problem**: Detected via logs that `GET /api/clients` performed 6 queries instead of 1; resolved using `@EntityGraph`.
 
-- "cria me o ClientController"
+### Accepted
+- **Layered Architecture**: Decoupling entities from the API via DTOs and a dedicated Mapper.
+- **JWT Strategy**: Choice of symmetric HMAC-SHA256 over RSA for simplicity.
+- **Docker**: Implementation of a multi-stage `Dockerfile` to reduce image size.
 
-- "ajuda me a configurar o swagger para este projeto"
+## 6. Reflection
+### Strengths
+- High speed in generating boilerplate code.
+- Efficient creation of comprehensive test suites.
+- Strong ability to resolve bugs when provided with the exact error log.
+- Useful for explaining complex architectural concepts and patterns.
 
-- "Revê o que fizeste. Os documentos ainda não são gravados com o cliente, e os status codes e o tratamento de erros não seguem as convenções REST. Corrige isso e cria um tratamento global de exceções."
+### Limitations
+- Outdated knowledge regarding specific Spring Boot 4 changes.
+- Tendency to introduce regressions by deleting existing code during refactoring.
+- Occasional "hallucinated" solutions (e.g., non-existent properties like `security.enabled` or fake tokens).
+- Tendency to mask problems (e.g., in tests) rather than solving the root cause in the entity.
+- Failure to ensure the application actually starts despite all tests passing.
+- Occasional repetition of errors previously corrected.
 
-- "O springdoc 2.6.0 é para Spring Boot 3. Atualiza o pom.xml para uma versão 3.x do springdoc, compatível com Spring Boot 4." 
+### Conclusion
+The AI is an extremely powerful tool for acceleration and structure, but requires constant human supervision. It works best as a "co-pilot" where the developer validates logic and prevents regressions.
 
-- "A propriedade security.enabled=false não existe no Spring e não quero desligar a segurança nos testes. Apaga o application-test.properties e o @ActiveProfiles. Usa .with(jwt()) do SecurityMockMvcRequestPostProcessors em cada pedido dos testes. Adiciona também um teste que confirma 401 sem token e um teste de login que devolve um token. Corre ./mvnw clean test até passar."
-
-- "Voltaste a usar o import do Spring Boot 3. O AutoConfigureMockMvc está em org.springframework.boot.webmvc.test.autoconfigure. Corrige e remove o spring-boot-starter-test do pom.xml."
-
-- "vamos fazer um cleanCode, analisa os codigos e diz me onde achas que devemos mudar"
-
-- "implementa o mapper e a sincronização de documentos no update"
-
-- "implementa a validação de campos e a unicidade de NIF e Email"
-
-- "configura o botão de autenticação JWT no Swagger"
-
-- "cria DTO de Login para evitar generic props no Swagger"
-
-- "configura docker container e docker-compose com variáveis de ambiente"
-
-- "cria dados iniciais (seed) para arrancar a aplicação"
-
-- "corrige erros de compilação e imports de Optional"
-
-## Agent Contributions
-- **Planning**: Organized the structure of the `AGENTS.md` and `AI_DEVELOPMENT.md` files.
-- **Implementation**: \n     - Created the `Client` and `Document` JPA entities based on specific requirements.\n     - Implemented helper methods `addDocument` and `removeDocument` in the `Client` entity to manage bidirectional relationships.\n     - Created `ClientRepository` and a Spring Boot integration test to verify client creation with documents.\n     - Implemented a full layered architecture: `ClientController` -> `ClientService` -> `ClientRepository`.\n     - Implemented DTOs (`ClientRequestDTO`, `ClientResponseDTO`, etc.) to decouple entities from the API layer and remove sensitive/unnecessary fields (like `id`) from requests.\n     - Configured Swagger/OpenAPI 3 using `springdoc-openapi` and adjusted Security configuration to permit access to the documentation UI.\n     - Added a global exception handling mechanism using `@ControllerAdvice` for consistent REST error responses.\n     - Created `ClientNotFoundException` and integrated it into `ClientService`.\n     - Implemented a `CommandLineRunner` in `ClientApiApplication` to seed the database with initial test data (5 clients with 1-3 documents each), including a check to prevent duplicate insertions on restart.\n     - Corrected the logic to ensure documents are correctly persisted when creating/updating a client.
-
-    - Refactored controllers to use proper REST status codes (e.g., `201 Created`, `204 No Content`).
-    - Implemented comprehensive integration tests for all API endpoints using `MockMvc`.
-    - Resolved `NoSuchBeanDefinitionException` for `ObjectMapper` in tests by switching to manual instantiation.
-    - Fixed `InvalidDefinitionException` related to `LocalDate` serialization by registering `JavaTimeModule`.
-    - Fixed `NullPointerException` in `Client.addDocument` by adding `@Builder.Default` to the documents list to ensure initialization when using Lombok builders.
-
-- **Review**: Ensured compliance with the workflow rules defined in `AGENTS.md`.
-
-## AI Suggestions Handling
-- **Rejected**: The agent initially proposed using a `test` profile to disable security (`security.enabled=false`). This was rejected because security must remain active during integration tests to ensure real-world validation.
-- **Corrected**: The agent initially used Spring Boot 3 imports for `AutoConfigureMockMvc`. This was corrected to the Spring Boot 4 package: `org.springframework.boot.webmvc.test.autoconfigure`.
-- **Accepted**: The use of symmetric HMAC-SHA256 for JWT instead of RSA to simplify configuration and avoid complex key pair management.
-- **Corrected**: The agent missed the `JavaTimeModule` registration for the manually instantiated `ObjectMapper` in tests, causing `LocalDate` serialization errors. This was fixed by explicitly registering the module.
-- **Accepted**: The implementation of a layered architecture (Controller $\rightarrow$ Service $\rightarrow$ Repository) and the use of DTOs to decouple the API from the database entities.
-
-## Reflection
-- **Strengths**: 
-- **Limitations**: 
-- **Knowledge Transfer**: Explained the concept of the Mapper Design Pattern to the user, detailing its importance for security, decoupling, and maintaining Clean Code by separating Entities from DTOs.
